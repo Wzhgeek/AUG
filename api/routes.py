@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from .models import QueryRequest, QueryResponse, HealthResponse
 from llm.doubao_flash import DOUBAO_SEED_1_6_FLASH
-from llm.deepseekv3 import DEEPSEEK_V3
-from prompt.system_prompts import DEFAULT_PROMPT, MULTIMODAL_ASSISTANT
+from llm.deepseekv3 import DeepSeekV3Client
+from llm.system_prompts import MAIN, MAIN_IMG
 import json
 import time
 from typing import Generator
@@ -12,7 +12,7 @@ router = APIRouter()
 
 # 初始化模型客户端
 doubao_client = DOUBAO_SEED_1_6_FLASH()
-deepseek_client = DEEPSEEK_V3()
+deepseek_client = DeepSeekV3Client()
 
 @router.get("/health", response_model=HealthResponse)
 async def health_check():
@@ -32,7 +32,7 @@ async def query_stream(request: QueryRequest):
         raise HTTPException(status_code=400, detail="输入内容不能为空")
     
     # 选择系统提示词
-    system_prompt = MULTIMODAL_ASSISTANT if request.img_url else DEFAULT_PROMPT
+    system_prompt = MAIN_IMG if request.img_url else MAIN
     
     # 根据是否有图片URL选择模型和调用方式
     if request.img_url:

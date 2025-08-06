@@ -1,57 +1,28 @@
 import os
 from openai import OpenAI
 import dotenv
-from typing import AsyncGenerator, Generator, Optional, List, Dict, Any
+from llm.system_prompts import MAIN
+from typing import AsyncGenerator, Generator
 
 dotenv.load_dotenv()
 
-class DEEPSEEK_V3:
-    """DeepSeek V3 客户端类，支持非流式和流式响应"""
+
+class DeepSeekV3Client:
+    """DeepSeek V3 客户端类，支持流式响应"""
     
     def __init__(self):
         """初始化客户端"""
         # 获取环境变量
-        self.base_url = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
-        self.api_key = os.environ.get("DEEPSEEK_API_KEY")
+        self.base_url = os.environ.get("ARK_BASE_URL")
+        self.api_key = os.environ.get("ARK_API_KEY")
+        self.model = os.environ.get("DEEPSEEK_V3")
         
         # 初始化OpenAI客户端
         self.client = OpenAI(
             base_url=self.base_url,
             api_key=self.api_key,
         )
-        
-        # 模型ID
-        self.model = "deepseek-chat"
-    
-    def chat(self, user_input: str, system_prompt: str = None) -> str:
-        """
-        非流式聊天方法
-        
-        Args:
-            user_input: 用户输入的消息
-            system_prompt: 系统提示词
-            
-        Returns:
-            str: 完整的响应文本
-        """
-        try:
-            messages = []
-            if system_prompt:
-                messages.append({"role": "system", "content": system_prompt})
-            messages.append({"role": "user", "content": user_input})
-            
-            # 创建非流式响应
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                stream=False,
-            )
-            
-            # 返回完整响应
-            return response.choices[0].message.content
-                    
-        except Exception as e:
-            return f"错误: {str(e)}"
+
     
     def chat_stream(self, user_input: str, system_prompt: str = None) -> Generator[str, None, None]:
         """
@@ -59,40 +30,61 @@ class DEEPSEEK_V3:
         
         Args:
             user_input: 用户输入的消息
-            system_prompt: 系统提示词
+            system_prompt: 系统提示词，默认为MAIN_PROMPT
             
         Yields:
-            str: 流式响应片段
+            str: 流式响应的文本片段
         """
-        try:
-            messages = []
-            if system_prompt:
-                messages.append({"role": "system", "content": system_prompt})
-            messages.append({"role": "user", "content": user_input})
+        if system_prompt is None:
+            system_prompt = MAIN
             
+        try:
             # 创建流式响应
-            response = self.client.chat.completions.create(
+            stream = self.client.chat.completions.create(
                 model=self.model,
-                messages=messages,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_input},
+                ],
                 stream=True,
             )
             
-            # 返回流式响应
-            for chunk in response:
-                if chunk.choices[0].delta.content is not None:
-                    yield chunk.choices[0].delta.content
+            # 流式输出响应
+            for chunk in stream:
+                if not chunk.choices:
+                    continue
+                content = chunk.choices[0].delta.content
+                if content:
+                    yield content
                     
         except Exception as e:
             yield f"错误: {str(e)}"
     
-    def chat_print(self, user_input: str, system_prompt: str = None) -> str:
+    def chat_stream_print(self, user_input: str, system_prompt: str = None) -> None:
         """
-        聊天并直接打印输出
+        流式聊天并直接打印输出
         
         Args:
             user_input: 用户输入的消息
-            system_prompt: 系统提示词
+            system_prompt: 系统提示词，默认为MAIN_PROMPT
         """
-        response = self.chat(user_input, system_prompt)
-        print(response)
-        return response 
+        for chunk in self.chat_stream(user_input, system_prompt):
+            print(chunk, end="")
+        print()
+
+
+
+# 使用示例
+if __name__ == "__main__":
+    # 创建 DeepSeek 客户端实例
+    client = DeepSeekV3Client()
+    
+    # # 方式1: 流式输出并打印
+    # client.chat_stream_print("你好")
+    
+    # 方式2: 获取流式响应进行处理
+    for response_chunk in client.chat_stream("你好"):
+        # 在这里可以对每个响应片段进行处理
+        print(response_chunk, end="")
+    print()
+    

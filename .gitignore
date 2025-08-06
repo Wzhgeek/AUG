@@ -166,3 +166,5 @@ temp/
 *.temp 
 
 com
+study.ipynb
+test.py
