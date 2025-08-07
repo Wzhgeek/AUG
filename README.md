@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![AUG Logo](readme_img/logo.png)
+<img src="readme_img/logo.png" alt="AUG Logo" width="1200" height="600" class="center" />
 
 **自然语言转UML图生成器** - 基于大模型的智能UML图表生成工具
 
