@@ -22,4 +22,8 @@ REDIS_DB = int(os.getenv("REDIS_DB", 0))
 # API配置
 ARK_BASE_URL = os.getenv("ARK_BASE_URL")
 ARK_API_KEY = os.getenv("ARK_API_KEY")
-DOUBAO_SEED_1_6_FLASH = os.getenv("DOUBAO_SEED_1_6_FLASH") 
+DOUBAO_SEED_1_6_FLASH = os.getenv("DOUBAO_SEED_1_6_FLASH")
+
+# Ollama本地模型配置
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_MODEL_NAME = os.getenv("OLLAMA_MODEL_NAME", "llama3.2") 

@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse, FileResponse
 from .models import QueryRequest, QueryResponse, HealthResponse, PlantUMLResult, ImageListResponse
 from llm.doubao_flash import DOUBAO_SEED_1_6_FLASH
 from llm.deepseekv3 import DeepSeekV3Client
+from llm.ollama_client import OllamaClient
 from llm.system_prompts import MAIN, MAIN_IMG
 from util.plantuml_service import plantuml_service
 from database.services import DatabaseService
@@ -21,6 +22,16 @@ router = APIRouter()
 # 初始化模型客户端
 doubao_client = DOUBAO_SEED_1_6_FLASH()
 deepseek_client = DeepSeekV3Client()
+
+# 初始化Ollama客户端 (可选)
+try:
+    from config import OLLAMA_BASE_URL, OLLAMA_MODEL_NAME
+    ollama_client = OllamaClient(OLLAMA_BASE_URL, OLLAMA_MODEL_NAME)
+    OLLAMA_AVAILABLE = True
+except Exception as e:
+    print(f"Ollama客户端初始化失败: {e}")
+    ollama_client = None
+    OLLAMA_AVAILABLE = False
 
 @router.get("/health", response_model=HealthResponse)
 async def health_check():
