@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # Redis服务 - 用于多轮对话记忆
+  redis:
+    image: redis:7-alpine
+    container_name: aug_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    networks:
+      - aug_network
+
+  # PostgreSQL服务 - 用于历史会话存储（比SQLite更适合Docker环境）
+  postgres:
+    image: postgres:15-alpine
+    container_name: aug_postgres
+    environment:
+      POSTGRES_DB: aug_db
+      POSTGRES_USER: aug_user
+      POSTGRES_PASSWORD: aug_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    networks:
+      - aug_network
+
+  # Redis GUI管理工具
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: aug_redis_commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - aug_network
+
+  # PostgreSQL GUI管理工具
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: aug_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@aug.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "8082:80"
+    depends_on:
+      - postgres
+    networks:
+      - aug_network
+
+volumes:
+  redis_data:
+  postgres_data:
+
+networks:
+  aug_network:
+    driver: bridge 
