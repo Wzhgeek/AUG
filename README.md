@@ -2,6 +2,8 @@
 
 **自然语言转UML图生成器** - 基于大模型的智能UML图表生成工具
 
+<img src="readme_img/logo.png" alt="AUG Logo" width="600" height="300" class="center" />
+
 ## 📖 项目简介
 
 AUG是一个基于大模型（DeepSeek V3 + 豆包）的智能UML图表生成工具，支持通过自然语言描述或图片上传来生成各种类型的UML图表。项目采用前后端分离架构，具备完整的会话管理、多轮对话记忆和历史存储功能。
